@@ -4,27 +4,30 @@ class MapsState extends Equatable {
   final Set<Marker> markers;
   final List<LatLng> routePositions;
   final bool isTracking;
+  final bool isCameraLocked;
   final LocationPointData? currentLocation;
-  final LatLng? cameraPosition;
+  final LatLng? initialCameraPosition;
   final CustomFailure? error;
 
   const MapsState({
     required this.markers,
     required this.routePositions,
     required this.isTracking,
-    this.cameraPosition,
+    required this.isCameraLocked,
+    this.initialCameraPosition,
     this.currentLocation,
     this.error,
   });
 
   factory MapsState.initial() {
     return MapsState(
-      cameraPosition: null,
+      initialCameraPosition: null,
       markers: {},
       routePositions: [],
       currentLocation: null,
       error: null,
       isTracking: false,
+      isCameraLocked: false,
     );
   }
 
@@ -37,30 +40,34 @@ class MapsState extends Equatable {
   }
 
   MapsState copyWith({
-    LatLng? cameraPosition,
+    LatLng? initialCameraPosition,
     Set<Marker>? markers,
     List<LatLng>? routePositions,
     LocationPointData? currentLocation,
     CustomFailure? error,
     bool? isTracking,
+    bool? isCameraLocked,
   }) {
     return MapsState(
-      cameraPosition: cameraPosition ?? this.cameraPosition,
+      initialCameraPosition:
+          initialCameraPosition ?? this.initialCameraPosition,
       markers: markers ?? this.markers,
       routePositions: routePositions ?? this.routePositions,
       currentLocation: currentLocation ?? this.currentLocation,
       error: error ?? this.error,
       isTracking: isTracking ?? this.isTracking,
+      isCameraLocked: isCameraLocked ?? this.isCameraLocked,
     );
   }
 
   @override
   List<Object?> get props => [
-        cameraPosition,
+        initialCameraPosition,
         markers,
         routePositions,
         currentLocation,
         error,
         isTracking,
+        isCameraLocked,
       ];
 }

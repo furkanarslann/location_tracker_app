@@ -20,6 +20,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     on<MapsRouteReset>(_onRouteReset);
     on<MapsRouteAdded>(_onRouteAdded);
     on<_MapsLocationReceived>(_onLocationReceived);
+    on<MapsCameraLockToggled>(_onCameraLockToggled);
   }
 
   final LocationRepository repository;
@@ -35,7 +36,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       final hasPermission = await repository.checkLocationPermission();
       if (!hasPermission) {
         emit(state.copyWith(
-          cameraPosition: MapConstants.defaultLocation,
+          initialCameraPosition: MapConstants.defaultLocation,
           error: LocationPermissionDeniedFailure(),
         ));
         return;
@@ -48,7 +49,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       final savedRoute = await repository.getSavedRouteData();
       if (savedRoute == null) {
         emit(state.copyWith(
-          cameraPosition: currentLocation.position,
+          initialCameraPosition: currentLocation.position,
           currentLocation: currentLocation,
           isTracking: true,
         ));
@@ -77,7 +78,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       emit(
         state.copyWith(
           isTracking: true,
-          cameraPosition: currentLocation.position,
+          initialCameraPosition: currentLocation.position,
           currentLocation: currentLocation,
           routePositions: savedRoute.positions,
           markers: footprintMarkers,
@@ -219,6 +220,13 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     } catch (e) {
       emit(state.copyWith(error: LocationServiceFailure(e.toString())));
     }
+  }
+
+  Future<void> _onCameraLockToggled(
+    MapsCameraLockToggled event,
+    Emitter<MapsState> emit,
+  ) async {
+    emit(state.copyWith(isCameraLocked: !state.isCameraLocked));
   }
 
   @override

@@ -31,3 +31,8 @@ class _MapsLocationReceived extends MapsEvent {
   @override
   List<Object> get props => [location];
 }
+
+class MapsCameraLockToggled extends MapsEvent {
+  @override
+  List<Object?> get props => [];
+}
