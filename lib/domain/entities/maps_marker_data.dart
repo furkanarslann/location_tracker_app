@@ -27,7 +27,7 @@ class MapsMarkerData extends Equatable {
     return MapsMarkerData(
       id: sourceMarkerId,
       position: position,
-      iconHue: BitmapDescriptor.hueBlue,
+      iconHue: BitmapDescriptor.hueRed,
       title: 'Source',
       subtitle: address ?? 'Address not found',
     );
