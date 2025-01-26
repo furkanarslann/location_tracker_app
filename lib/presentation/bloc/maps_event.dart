@@ -15,6 +15,15 @@ class MapsLocationTrackingStopped extends MapsEvent {}
 
 class MapsRouteReset extends MapsEvent {}
 
+class MapsRouteAdded extends MapsEvent {
+  final LatLng destination;
+
+  const MapsRouteAdded(this.destination);
+
+  @override
+  List<Object?> get props => [destination];
+}
+
 class _MapsLocationReceived extends MapsEvent {
   final LocationPointData location;
   const _MapsLocationReceived(this.location);

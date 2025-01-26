@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -16,14 +15,14 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
   StreamSubscription<LocationPointData>? _locationSubscription;
 
   MapsBloc({required this.repository}) : super(MapsState.initial()) {
-    on<MapsInitialized>(_onInitialize);
-    on<MapsLocationTrackingStarted>(_onStartTracking);
-    on<MapsLocationTrackingStopped>(_onStopTracking);
-    on<MapsRouteReset>(_onResetRoute);
-    on<_MapsLocationReceived>(_onUpdateLocation);
+    on<MapsInitialized>(_onInitialized);
+    on<MapsLocationTrackingStarted>(_onLocationTrackingStarted);
+    on<MapsLocationTrackingStopped>(_onLocationTrackingStopped);
+    on<MapsRouteReset>(_onRouteReset);
+    on<MapsRouteAdded>(_onRouteAdded);
   }
 
-  Future<void> _onInitialize(
+  Future<void> _onInitialized(
     MapsInitialized event,
     Emitter<MapsState> emit,
   ) async {
@@ -38,15 +37,17 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       }
 
       final currentLocation = await repository.getLocation();
-      final currPosition = currentLocation.position;
-
       add(MapsLocationTrackingStarted());
 
-      // final routeData = await repository.getSavedRoutePositions();
-      final routePositions = await repository.getRouteBetweenPositions(
-        source: currPosition,
-        destination: LatLng(37.73268128060671, -122.41299357265234),
-      );
+      final routePositions = await repository.getSavedRoutePositions();
+
+      if (routePositions.length < 2) {
+        emit(state.copyWith(
+          initialPosition: currentLocation.position,
+          currentLocation: currentLocation,
+        ));
+        return;
+      }
 
       final startPosition = routePositions.first;
       final destinationPosition = routePositions.last;
@@ -56,26 +57,24 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           initialPosition: currentLocation.position,
           currentLocation: currentLocation,
           routePositions: routePositions,
-          markers: routePositions.isNotEmpty
-              ? {
-                  Marker(
-                    markerId: MarkerId(startPosition.toString()),
-                    position: startPosition,
-                    infoWindow: InfoWindow(title: 'Starting Location'),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueBlue,
-                    ),
-                  ),
-                  Marker(
-                    markerId: MarkerId(destinationPosition.toString()),
-                    position: destinationPosition,
-                    infoWindow: InfoWindow(title: 'Destination Location'),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen,
-                    ),
-                  ),
-                }
-              : {},
+          markers: <Marker>{
+            Marker(
+              markerId: MarkerId(startPosition.toString()),
+              position: startPosition,
+              infoWindow: InfoWindow(title: 'Starting Location'),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueBlue,
+              ),
+            ),
+            Marker(
+              markerId: MarkerId(destinationPosition.toString()),
+              position: destinationPosition,
+              infoWindow: InfoWindow(title: 'Destination Location'),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen,
+              ),
+            ),
+          },
         ),
       );
     } catch (e) {
@@ -88,7 +87,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     }
   }
 
-  Future<void> _onStartTracking(
+  Future<void> _onLocationTrackingStarted(
     MapsLocationTrackingStarted event,
     Emitter<MapsState> emit,
   ) async {
@@ -100,7 +99,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     );
   }
 
-  Future<void> _onStopTracking(
+  Future<void> _onLocationTrackingStopped(
     MapsLocationTrackingStopped event,
     Emitter<MapsState> emit,
   ) async {
@@ -108,7 +107,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     return emit(state.copyWith(currentLocation: null));
   }
 
-  Future<void> _onResetRoute(
+  Future<void> _onRouteReset(
     MapsRouteReset event,
     Emitter<MapsState> emit,
   ) async {
@@ -116,12 +115,41 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     return emit(state.copyWith(routePositions: [], markers: {}));
   }
 
-  Future<void> _onUpdateLocation(
-    _MapsLocationReceived event,
+  Future<void> _onRouteAdded(
+    MapsRouteAdded event,
     Emitter<MapsState> emit,
   ) async {
-    log('Location received: ${event.location}');
-    return emit(state.copyWith(currentLocation: event.location));
+    try {
+      assert(state.isTracking);
+
+      final routePositions = await repository.getRouteBetweenPositions(
+        source: state.currentLocation!.position,
+        destination: event.destination,
+      );
+
+      final markers = <Marker>{
+        Marker(
+          markerId: MarkerId('marker_source'),
+          position: state.currentLocation!.position,
+          infoWindow: InfoWindow(title: 'Source'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        ),
+        Marker(
+          markerId: MarkerId('marker_destination'),
+          position: event.destination,
+          infoWindow: InfoWindow(title: 'Destination'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
+        )
+      };
+
+      emit(state.copyWith(routePositions: routePositions, markers: markers));
+
+      await repository.saveRoutePositions(routePositions);
+    } catch (e) {
+      emit(state.copyWith(error: LocationServiceFailure(e.toString())));
+    }
   }
 
   @override

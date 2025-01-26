@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/presentation/bloc/maps_bloc.dart';
@@ -24,14 +27,17 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
 
   void _toggleTracking(BuildContext context) {
     setState(() => _isTracking = !_isTracking);
-    context.read<MapsBloc>().add(_isTracking
-        ? MapsLocationTrackingStarted()
-        : MapsLocationTrackingStopped());
+    context.read<MapsBloc>().add(
+          _isTracking
+              ? MapsLocationTrackingStarted()
+              : MapsLocationTrackingStopped(),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.red,
       appBar: AppBar(
         title: const Text('Location Tracker'),
         actions: [
@@ -54,8 +60,9 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
       body: BlocConsumer<MapsBloc, MapsState>(
         listener: (context, state) => _handleErrors(state, context),
         builder: (context, state) {
+          log('Rebuilding GoogleMapPage...', name: 'GoogleMapPage');
           if (state.permissionGrantedButNoLocation) {
-            return _RetryContent();
+            return const _RetryContent();
           }
 
           if (state.initialPosition == null) {
@@ -81,6 +88,11 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
                   width: 5,
                   points: state.routePositions,
                 ),
+            },
+            onLongPress: (LatLng position) async {
+              if (!state.isTracking) return;
+              context.read<MapsBloc>().add(MapsRouteAdded(position));
+              await Haptics.vibrate(HapticsType.selection);
             },
           );
         },

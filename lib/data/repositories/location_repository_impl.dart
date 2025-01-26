@@ -94,8 +94,9 @@ class LocationRepositoryImpl implements LocationRepository {
     return routeService.getSavedRoutePositions();
   }
 
+  @override
   Future<void> saveRoutePositions(List<LatLng> positions) async {
-    await routeService.saveRoutePositions(positions);
+    return routeService.saveRoutePositions(positions);
   }
 
   @override

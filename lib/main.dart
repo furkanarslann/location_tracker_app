@@ -13,11 +13,12 @@ final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
   // Services
+  final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerLazySingleton<GeolocatorService>(() => GeolocatorService());
-  getIt.registerLazySingletonAsync<RouteService>(
-    () async => RouteService(
+  getIt.registerLazySingleton<RouteService>(
+    () => RouteService(
       polylinePoints: PolylinePoints(),
-      sharedPreferences: await SharedPreferences.getInstance(),
+      sharedPreferences: sharedPreferences,
     ),
   );
 
