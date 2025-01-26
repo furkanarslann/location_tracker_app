@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 export 'package:geolocator/geolocator.dart';
 
 class GeolocatorService {
@@ -24,5 +25,14 @@ class GeolocatorService {
 
   Stream<Position> getPositionStream() {
     return Geolocator.getPositionStream();
+  }
+
+  double calculateDistance(LatLng startPosition, LatLng endPosition) {
+    return Geolocator.distanceBetween(
+      startPosition.latitude,
+      startPosition.longitude,
+      endPosition.latitude,
+      endPosition.longitude,
+    );
   }
 }

@@ -11,16 +11,19 @@ part 'maps_state.dart';
 part 'maps_event.dart';
 
 class MapsBloc extends Bloc<MapsEvent, MapsState> {
-  final LocationRepository repository;
-  StreamSubscription<LocationPointData>? _locationSubscription;
-
   MapsBloc({required this.repository}) : super(MapsState.initial()) {
     on<MapsInitialized>(_onInitialized);
     on<MapsLocationTrackingStarted>(_onLocationTrackingStarted);
     on<MapsLocationTrackingStopped>(_onLocationTrackingStopped);
     on<MapsRouteReset>(_onRouteReset);
     on<MapsRouteAdded>(_onRouteAdded);
+    on<_MapsLocationReceived>(_onLocationReceived);
   }
+
+  final LocationRepository repository;
+
+  StreamSubscription<LocationPointData>? _locationSubscription;
+  late LatLng _lastFootprintPosition;
 
   Future<void> _onInitialized(
     MapsInitialized event,
@@ -37,10 +40,10 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       }
 
       final currentLocation = await repository.getLocation();
+      _lastFootprintPosition = currentLocation.position;
       add(MapsLocationTrackingStarted());
 
       final routePositions = await repository.getSavedRoutePositions();
-
       if (routePositions.length < 2) {
         emit(state.copyWith(
           cameraPosition: currentLocation.position,
@@ -49,7 +52,6 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         ));
         return;
       }
-
       final startPosition = routePositions.first;
       final destinationPosition = routePositions.last;
 
@@ -151,6 +153,46 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       emit(state.copyWith(routePositions: routePositions, markers: markers));
 
       await repository.saveRoutePositions(routePositions);
+    } catch (e) {
+      emit(state.copyWith(error: LocationServiceFailure(e.toString())));
+    }
+  }
+
+  Future<void> _onLocationReceived(
+    _MapsLocationReceived event,
+    Emitter<MapsState> emit,
+  ) async {
+    try {
+      final currentPosition = event.location.position;
+      final newMarkers = Set<Marker>.from(state.markers);
+
+      final distance = await repository.calculateDistance(
+        _lastFootprintPosition,
+        currentPosition,
+      );
+
+      if (distance >= MapConstants.minimumDistanceThreshold) {
+        newMarkers.add(
+          Marker(
+            markerId: MarkerId(
+              'footprint_${DateTime.now().millisecondsSinceEpoch}',
+            ),
+            position: currentPosition,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueViolet),
+            infoWindow: InfoWindow(
+              title: 'Footprint',
+              snippet: 'Distance: ${distance.toStringAsFixed(2)}m',
+            ),
+          ),
+        );
+        _lastFootprintPosition = currentPosition;
+      }
+
+      emit(state.copyWith(
+        currentLocation: event.location,
+        markers: newMarkers,
+      ));
     } catch (e) {
       emit(state.copyWith(error: LocationServiceFailure(e.toString())));
     }

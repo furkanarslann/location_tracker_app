@@ -15,5 +15,7 @@ abstract class LocationRepository {
     required LatLng destination,
   });
 
-  Future<String?> getAddressFromLatLng(double lat, double lng);
+  Future<double> calculateDistance(LatLng start, LatLng end);
+
+  Future<String?> getAddressFromPosition(LatLng position);
 }

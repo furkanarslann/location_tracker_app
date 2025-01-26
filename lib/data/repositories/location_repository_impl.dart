@@ -121,8 +121,13 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
-  Future<String?> getAddressFromLatLng(double lat, double lng) async {
+  Future<String?> getAddressFromPosition(LatLng position) async {
     // TODO(Furkan): Implement reverse geocoding
     return null;
+  }
+
+  @override
+  Future<double> calculateDistance(LatLng start, LatLng end) async {
+    return geoLocatorService.calculateDistance(start, end);
   }
 }
