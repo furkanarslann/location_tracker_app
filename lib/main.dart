@@ -6,8 +6,8 @@ import 'package:location_tracker_app/core/services/geocoding_service.dart';
 import 'package:location_tracker_app/core/services/route_service.dart';
 import 'package:location_tracker_app/data/repositories/location_repository_impl.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
-import 'package:location_tracker_app/presentation/bloc/maps_bloc.dart';
-import 'package:location_tracker_app/presentation/pages/maps_page.dart';
+import 'package:location_tracker_app/presentation/bloc/maps_bloc/maps_bloc.dart';
+import 'package:location_tracker_app/presentation/pages/maps/maps_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -52,6 +52,9 @@ class LocationTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Location Tracker',
+      theme: ThemeData(
+        primaryColor: Colors.green,
+      ),
       home: BlocProvider(
         create: (_) => getIt<MapsBloc>()..add(MapsInitialized()),
         child: const MapsPage(),
