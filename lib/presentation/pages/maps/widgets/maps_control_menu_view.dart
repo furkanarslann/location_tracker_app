@@ -10,17 +10,22 @@ class MapsControlMenuView extends StatelessWidget {
     return Positioned(
       left: 16,
       right: 16,
-      bottom: MediaQuery.viewPaddingOf(context).bottom + 16,
+      bottom: MediaQuery.viewPaddingOf(context).bottom + 8,
       child: Card(
-        elevation: 4,
         child: BlocBuilder<MapsBloc, MapsState>(
+          buildWhen: (previous, current) {
+            return previous.isTracking != current.isTracking ||
+                previous.isCameraLocked != current.isCameraLocked;
+          },
           builder: (context, state) {
             return Row(
               children: [
                 _MenuButton(
                   icon: Icon(
-                    state.isTracking ? Icons.stop : Icons.play_arrow,
-                    color: Theme.of(context).primaryColor,
+                    state.isTracking ? Icons.location_off : Icons.location_on,
+                    color: state.isTracking
+                        ? Colors.red
+                        : Theme.of(context).primaryColor,
                   ),
                   label: state.isTracking ? 'Stop Tracking' : 'Start Tracking',
                   onPressed: () {
@@ -30,7 +35,6 @@ class MapsControlMenuView extends StatelessWidget {
                     context.read<MapsBloc>().add(event);
                   },
                 ),
-                const _VerticalDivider(),
                 _MenuButton(
                   icon: Icon(
                     Icons.refresh,
@@ -41,21 +45,18 @@ class MapsControlMenuView extends StatelessWidget {
                     context.read<MapsBloc>().add(MapsRouteReset());
                   },
                 ),
-                VerticalDivider(
-                  width: 5,
-                  thickness: 5,
-                  color: Colors.red.withValues(alpha: 0.5),
-                ),
                 _MenuButton(
                   icon: Icon(
                     state.isCameraLocked
                         ? Icons.location_disabled
                         : Icons.my_location,
                     color: state.isTracking
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey,
+                        ? state.isCameraLocked
+                            ? Colors.red
+                            : Theme.of(context).primaryColor
+                        : Theme.of(context).disabledColor,
                   ),
-                  label: 'Camera Lock',
+                  label: state.isCameraLocked ? 'Unlock Camera' : 'Lock Camera',
                   onPressed: state.isTracking
                       ? () {
                           context.read<MapsBloc>().add(MapsCameraLockToggled());
@@ -105,18 +106,6 @@ class _MenuButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      color: Colors.grey.withValues(alpha: 0.5),
     );
   }
 }

@@ -54,6 +54,8 @@ class LocationTrackerApp extends StatelessWidget {
       title: 'Location Tracker',
       theme: ThemeData(
         primaryColor: Colors.green,
+        disabledColor: Colors.grey.withValues(alpha: 0.8),
+        cardTheme: const CardTheme(color: Colors.white, elevation: 4),
       ),
       home: BlocProvider(
         create: (_) => getIt<MapsBloc>()..add(MapsInitialized()),
