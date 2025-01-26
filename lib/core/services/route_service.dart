@@ -2,15 +2,18 @@ import 'dart:convert';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:location_tracker_app/domain/entities/route_data.dart';
 export 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class RouteService {
   final PolylinePoints polylinePoints;
   final SharedPreferences sharedPreferences;
+  static const String _routeKey = 'route_data';
 
-  static const String _routePositionsKey = 'route_positions';
-
-  RouteService({required this.polylinePoints, required this.sharedPreferences});
+  RouteService({
+    required this.polylinePoints,
+    required this.sharedPreferences,
+  });
 
   Future<List<LatLng>> getRouteBetweenCoordinates({
     required PolylineRequest request,
@@ -26,39 +29,26 @@ class RouteService {
         .toList();
   }
 
-  Future<void> saveRoutePositions(List<LatLng> positions) async {
-    final jsonList = positions.map((position) {
-      return {
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-      };
-    }).toList();
-
+  Future<void> saveRouteData(RouteData routeData) async {
     await sharedPreferences.setString(
-      _routePositionsKey,
-      json.encode(jsonList),
+      _routeKey,
+      json.encode(routeData.toJson()),
     );
   }
 
-  Future<List<LatLng>> getSavedRoutePositions() async {
-    final jsonString = sharedPreferences.getString(_routePositionsKey);
-    if (jsonString == null) return [];
+  Future<RouteData?> getSavedRouteData() async {
+    final jsonString = sharedPreferences.getString(_routeKey);
+    if (jsonString == null) return null;
 
     try {
-      final List<dynamic> jsonList = json.decode(jsonString);
-      return jsonList.map((json) {
-        final Map<String, dynamic> position = Map<String, dynamic>.from(json);
-        return LatLng(
-          position['latitude'] as double,
-          position['longitude'] as double,
-        );
-      }).toList();
+      final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
+      return RouteData.fromJson(jsonMap);
     } catch (e) {
-      return [];
+      return null;
     }
   }
 
   Future<void> clearSavedRoute() async {
-    await sharedPreferences.remove(_routePositionsKey);
+    await sharedPreferences.remove(_routeKey);
   }
 }

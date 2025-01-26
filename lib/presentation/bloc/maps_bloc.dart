@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
+import 'package:location_tracker_app/domain/entities/route_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 
 part 'maps_state.dart';
@@ -44,8 +45,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       _lastFootprintPosition = currentLocation.position;
       add(MapsLocationTrackingStarted());
 
-      final routePositions = await repository.getSavedRoutePositions();
-      if (routePositions.length < 2) {
+      final savedRoute = await repository.getSavedRouteData();
+      if (savedRoute == null) {
         emit(state.copyWith(
           cameraPosition: currentLocation.position,
           currentLocation: currentLocation,
@@ -53,28 +54,32 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         ));
         return;
       }
-      final startPosition = routePositions.first;
-      final destinationPosition = routePositions.last;
 
       emit(
         state.copyWith(
           isTracking: true,
           cameraPosition: currentLocation.position,
           currentLocation: currentLocation,
-          routePositions: routePositions,
+          routePositions: savedRoute.positions,
           markers: <Marker>{
             Marker(
-              markerId: MarkerId(startPosition.toString()),
-              position: startPosition,
-              infoWindow: InfoWindow(title: 'Starting Location'),
+              markerId: const MarkerId('marker_source'),
+              position: savedRoute.source,
+              infoWindow: InfoWindow(
+                title: 'Source',
+                snippet: savedRoute.sourceAddress ?? 'Address not found',
+              ),
               icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueBlue,
               ),
             ),
             Marker(
-              markerId: MarkerId(destinationPosition.toString()),
-              position: destinationPosition,
-              infoWindow: InfoWindow(title: 'Destination Location'),
+              markerId: const MarkerId('marker_destination'),
+              position: savedRoute.destination,
+              infoWindow: InfoWindow(
+                title: 'Destination',
+                snippet: savedRoute.destinationAddress ?? 'Address not found',
+              ),
               icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueGreen,
               ),
@@ -143,11 +148,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
 
       final markers = <Marker>{
         Marker(
-          markerId: MarkerId('marker_source'),
+          markerId: const MarkerId('marker_source'),
           position: state.currentLocation!.position,
-          onTap: () {
-            log('Marker address: $sourceAddress');
-          },
           infoWindow: InfoWindow(
             title: 'Source',
             snippet: sourceAddress ?? 'Address not found',
@@ -155,11 +157,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
         Marker(
-          markerId: MarkerId('marker_destination'),
+          markerId: const MarkerId('marker_destination'),
           position: event.destination,
-          onTap: () {
-            log('Marker address: $destinationAddress');
-          },
           infoWindow: InfoWindow(
             title: 'Destination',
             snippet: destinationAddress ?? 'Address not found',
@@ -169,8 +168,14 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         )
       };
 
+      final routeData = RouteData(
+        positions: routePositions,
+        sourceAddress: sourceAddress,
+        destinationAddress: destinationAddress,
+      );
+
       emit(state.copyWith(routePositions: routePositions, markers: markers));
-      await repository.saveRoutePositions(routePositions);
+      await repository.saveRouteData(routeData);
     } catch (e) {
       emit(state.copyWith(error: LocationServiceFailure(e.toString())));
     }

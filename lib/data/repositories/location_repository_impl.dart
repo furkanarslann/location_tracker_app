@@ -8,6 +8,7 @@ import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 import 'package:location_tracker_app/env.dart';
 import 'package:location_tracker_app/core/services/geocoding_service.dart';
+import 'package:location_tracker_app/domain/entities/route_data.dart';
 
 class LocationRepositoryImpl implements LocationRepository {
   final GeolocatorService geoLocatorService;
@@ -88,18 +89,18 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
+  Future<void> saveRouteData(RouteData routeData) async {
+    return routeService.saveRouteData(routeData);
+  }
+
+  @override
+  Future<RouteData?> getSavedRouteData() async {
+    return routeService.getSavedRouteData();
+  }
+
+  @override
   Future<void> clearSavedRoute() async {
     await routeService.clearSavedRoute();
-  }
-
-  @override
-  Future<List<LatLng>> getSavedRoutePositions() async {
-    return routeService.getSavedRoutePositions();
-  }
-
-  @override
-  Future<void> saveRoutePositions(List<LatLng> positions) async {
-    return routeService.saveRoutePositions(positions);
   }
 
   @override
