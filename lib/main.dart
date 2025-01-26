@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:location_tracker_app/core/constants/app_constants.dart';
 import 'package:location_tracker_app/core/services/geo_locator_service.dart';
 import 'package:location_tracker_app/core/services/geocoding_service.dart';
 import 'package:location_tracker_app/core/services/route_service.dart';
@@ -51,7 +52,7 @@ class LocationTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Location Tracker',
+      title: AppConstants.appName,
       theme: ThemeData(
         primaryColor: Colors.green,
         disabledColor: Colors.grey.withValues(alpha: 0.8),
