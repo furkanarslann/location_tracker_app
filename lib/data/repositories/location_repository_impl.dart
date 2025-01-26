@@ -7,14 +7,17 @@ import 'package:location_tracker_app/core/services/route_service.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 import 'package:location_tracker_app/env.dart';
+import 'package:location_tracker_app/core/services/geocoding_service.dart';
 
 class LocationRepositoryImpl implements LocationRepository {
   final GeolocatorService geoLocatorService;
   final RouteService routeService;
+  final GeocodingService geocodingService;
 
   LocationRepositoryImpl({
     required this.geoLocatorService,
     required this.routeService,
+    required this.geocodingService,
   });
 
   @override
@@ -122,8 +125,7 @@ class LocationRepositoryImpl implements LocationRepository {
 
   @override
   Future<String?> getAddressFromPosition(LatLng position) async {
-    // TODO(Furkan): Implement reverse geocoding
-    return null;
+    return geocodingService.getAddressFromPosition(position);
   }
 
   @override

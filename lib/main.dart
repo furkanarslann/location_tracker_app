@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:location_tracker_app/core/services/geo_locator_service.dart';
+import 'package:location_tracker_app/core/services/geocoding_service.dart';
 import 'package:location_tracker_app/core/services/route_service.dart';
 import 'package:location_tracker_app/data/repositories/location_repository_impl.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
@@ -15,6 +16,7 @@ Future<void> setupDependencies() async {
   // Services
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerLazySingleton<GeolocatorService>(() => GeolocatorService());
+  getIt.registerLazySingleton<GeocodingService>(() => GeocodingService());
   getIt.registerLazySingleton<RouteService>(
     () => RouteService(
       polylinePoints: PolylinePoints(),
@@ -27,6 +29,7 @@ Future<void> setupDependencies() async {
     () => LocationRepositoryImpl(
       geoLocatorService: getIt<GeolocatorService>(),
       routeService: getIt<RouteService>(),
+      geocodingService: getIt<GeocodingService>(),
     ),
   );
 
