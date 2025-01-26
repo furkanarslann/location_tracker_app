@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location_tracker_app/core/constants/map_constants.dart';
-import 'package:location_tracker_app/core/errors/failures.dart';
+import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/presentation/bloc/maps_bloc.dart';
 
 class GoogleMapPage extends StatefulWidget {

@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location_tracker_app/core/constants/map_constants.dart';
-import 'package:location_tracker_app/core/errors/failures.dart';
+import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 
@@ -42,8 +42,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
 
       add(MapsLocationTrackingStarted());
 
-      // final routeData = await repository.getSavedRoute();
-      // TODO(Furkan): read from storage as above it's a mock implementation. start and destination can remain.
+      // final routeData = await repository.getSavedRoutePositions();
       final routePositions = await repository.getRouteBetweenPositions(
         source: currPosition,
         destination: LatLng(37.73268128060671, -122.41299357265234),
@@ -113,7 +112,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     MapsRouteReset event,
     Emitter<MapsState> emit,
   ) async {
-    await repository.resetRoute();
+    await repository.clearSavedRoute();
     return emit(state.copyWith(routePositions: [], markers: {}));
   }
 

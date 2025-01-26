@@ -6,7 +6,7 @@ abstract class LocationRepository {
   Stream<LocationPointData> getLocationUpdates();
 
   Future<List<LatLng>> getSavedRoutePositions();
-  Future<void> resetRoute();
+  Future<void> clearSavedRoute();
 
   Future<bool> checkLocationPermission();
 

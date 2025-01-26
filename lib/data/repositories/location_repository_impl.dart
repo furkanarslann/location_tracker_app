@@ -1,9 +1,9 @@
 import 'dart:developer';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location_tracker_app/core/errors/failures.dart';
-import 'package:location_tracker_app/core/service/geo_locator_service.dart';
-import 'package:location_tracker_app/core/service/route_service.dart';
+import 'package:location_tracker_app/core/failures/failures.dart';
+import 'package:location_tracker_app/core/services/geo_locator_service.dart';
+import 'package:location_tracker_app/core/services/route_service.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 import 'package:location_tracker_app/env.dart';
@@ -85,14 +85,17 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
-  Future<void> resetRoute() async {
-    // TODO(Furkan): Implement these methods with local storage
+  Future<void> clearSavedRoute() async {
+    await routeService.clearSavedRoute();
   }
 
   @override
   Future<List<LatLng>> getSavedRoutePositions() async {
-    // TODO(Furkan): Implement this method with local storage
-    return [];
+    return routeService.getSavedRoutePositions();
+  }
+
+  Future<void> saveRoutePositions(List<LatLng> positions) async {
+    await routeService.saveRoutePositions(positions);
   }
 
   @override
@@ -101,24 +104,16 @@ class LocationRepositoryImpl implements LocationRepository {
     required LatLng destination,
   }) async {
     try {
-      final result = await routeService.getRouteBetweenCoordinates(
+      final routePositions = await routeService.getRouteBetweenCoordinates(
+        googleApiKey: googleMapsApiKey,
         request: PolylineRequest(
           origin: PointLatLng(source.latitude, source.longitude),
           destination: PointLatLng(destination.latitude, destination.longitude),
           mode: TravelMode.driving,
         ),
-        googleApiKey: googleMapsApiKey,
       );
 
-      if (result.points.isEmpty) {
-        throw LocationServiceFailure(
-          result.errorMessage ?? 'Failed to get route coordinates',
-        );
-      }
-
-      return result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
+      return routePositions;
     } catch (e) {
       throw LocationServiceFailure('Failed to calculate route: $e');
     }
