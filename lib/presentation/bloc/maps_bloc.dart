@@ -6,7 +6,7 @@ import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/entities/route_data.dart';
-import 'package:location_tracker_app/domain/entities/map_marker_data.dart';
+import 'package:location_tracker_app/domain/entities/maps_marker_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 
 part 'maps_state.dart';
@@ -56,15 +56,19 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       }
 
       final footprintMarkers = state.markers.where(
-        (marker) => marker.markerId.value.startsWith(MapMarkerData.footprintMarkerId),
+        (marker) {
+          return marker.markerId.value.startsWith(
+            MapsMarkerData.footprintMarkerId,
+          );
+        },
       ).toSet();
 
       footprintMarkers.addAll({
-        MapMarkerData.source(
+        MapsMarkerData.source(
           position: savedRoute.source,
           address: savedRoute.sourceAddress,
         ).toMarker(),
-        MapMarkerData.destination(
+        MapsMarkerData.destination(
           position: savedRoute.destination,
           address: savedRoute.destinationAddress,
         ).toMarker(),
@@ -120,7 +124,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     final footprintMarkers = state.markers.where(
       (marker) {
         return marker.markerId.value.startsWith(
-          MapMarkerData.footprintMarkerId,
+          MapsMarkerData.footprintMarkerId,
         );
       },
     ).toSet();
@@ -147,16 +151,19 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         event.destination,
       );
 
-      final footprintMarkers = state.markers.where(
-        (marker) => marker.markerId.value.startsWith(MapMarkerData.footprintMarkerId),
-      ).toSet();
+      final footprintMarkers = state.markers
+          .where(
+            (marker) => marker.markerId.value
+                .startsWith(MapsMarkerData.footprintMarkerId),
+          )
+          .toSet();
 
       footprintMarkers.addAll({
-        MapMarkerData.source(
+        MapsMarkerData.source(
           position: state.currentLocation!.position,
           address: sourceAddress,
         ).toMarker(),
-        MapMarkerData.destination(
+        MapsMarkerData.destination(
           position: event.destination,
           address: destinationAddress,
         ).toMarker(),
@@ -172,7 +179,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         routePositions: routePositions,
         markers: footprintMarkers,
       ));
-      
+
       await repository.saveRouteData(routeData);
     } catch (e) {
       emit(state.copyWith(error: LocationServiceFailure(e.toString())));
@@ -196,7 +203,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         final address = await repository.getAddressFromPosition(
           currentPosition,
         );
-        final footprintMarker = MapMarkerData.footprint(
+        final footprintMarker = MapsMarkerData.footprint(
           position: currentPosition,
           address: address,
         ).toMarker();
