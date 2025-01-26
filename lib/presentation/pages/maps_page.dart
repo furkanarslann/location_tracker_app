@@ -7,15 +7,16 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/presentation/bloc/maps_bloc.dart';
+import 'package:location_tracker_app/presentation/pages/widgets/maps_retry_content.dart';
 
-class GoogleMapPage extends StatefulWidget {
-  const GoogleMapPage({super.key});
+class MapsPage extends StatefulWidget {
+  const MapsPage({super.key});
 
   @override
-  State<GoogleMapPage> createState() => _GoogleMapPageState();
+  State<MapsPage> createState() => _MapsPageState();
 }
 
-class _GoogleMapPageState extends State<GoogleMapPage> {
+class _MapsPageState extends State<MapsPage> {
   GoogleMapController? _mapController;
 
   @override
@@ -54,24 +55,14 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
       ),
       body: MultiBlocListener(
         listeners: [
-          BlocListener<MapsBloc, MapsState>(
-            listenWhen: (previous, current) => previous.error != current.error,
-            listener: (context, state) => _handleErrors(context, state),
-          ),
-          BlocListener<MapsBloc, MapsState>(
-            listenWhen: (previous, current) {
-              return previous.currentLocation != current.currentLocation ||
-                  previous.isCameraLocked != current.isCameraLocked ||
-                  previous.isTracking != current.isTracking;
-            },
-            listener: (_, state) => _handleCameraUpdate(state),
-          ),
+          _handleErrorsBlocListener(),
+          _handleCameraUpdatesBlocListener(),
         ],
         child: BlocBuilder<MapsBloc, MapsState>(
           builder: (context, state) {
             log('Rebuilding GoogleMapPage...', name: 'GoogleMapPage');
             if (state.permissionGrantedButNoLocation) {
-              return const _RetryContent();
+              return const MapsRetryContent();
             }
 
             if (state.initialCameraPosition == null) {
@@ -132,53 +123,40 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
     );
   }
 
-  void _handleErrors(BuildContext context, MapsState state) {
-    if (state.hasError) {
-      final error = state.error;
-      if (error is LocationPermissionDeniedFailure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred!')),
-        );
-      }
-    }
+  BlocListener<MapsBloc, MapsState> _handleCameraUpdatesBlocListener() {
+    return BlocListener<MapsBloc, MapsState>(
+      listenWhen: (previous, current) {
+        return previous.currentLocation != current.currentLocation ||
+            previous.isCameraLocked != current.isCameraLocked ||
+            previous.isTracking != current.isTracking;
+      },
+      listener: (_, state) {
+        if (state.isCameraLocked && state.isTracking) {
+          _mapController?.animateCamera(
+            CameraUpdate.newLatLng(state.currentLocation!.position),
+          );
+        }
+      },
+    );
   }
 
-  void _handleCameraUpdate(MapsState state) {
-    if (state.isCameraLocked && state.isTracking) {
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLng(state.currentLocation!.position),
-      );
-    }
-  }
-}
-
-class _RetryContent extends StatelessWidget {
-  const _RetryContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text(
-            'Your location could not be determined in time! Please retry.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              context.read<MapsBloc>().add(MapsInitialized());
-            },
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
+  BlocListener<MapsBloc, MapsState> _handleErrorsBlocListener() {
+    return BlocListener<MapsBloc, MapsState>(
+      listenWhen: (previous, current) => previous.error != current.error,
+      listener: (context, state) {
+        if (state.hasError) {
+          final error = state.error;
+          if (error is LocationPermissionDeniedFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permission denied!')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('An error occurred!')),
+            );
+          }
+        }
+      },
     );
   }
 }

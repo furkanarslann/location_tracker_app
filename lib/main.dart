@@ -7,7 +7,7 @@ import 'package:location_tracker_app/core/services/route_service.dart';
 import 'package:location_tracker_app/data/repositories/location_repository_impl.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 import 'package:location_tracker_app/presentation/bloc/maps_bloc.dart';
-import 'package:location_tracker_app/presentation/pages/google_maps_page.dart';
+import 'package:location_tracker_app/presentation/pages/maps_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -52,10 +52,9 @@ class LocationTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Location Tracker',
-      theme: ThemeData(primarySwatch: Colors.blue),
       home: BlocProvider(
         create: (_) => getIt<MapsBloc>()..add(MapsInitialized()),
-        child: const GoogleMapPage(),
+        child: const MapsPage(),
       ),
     );
   }
