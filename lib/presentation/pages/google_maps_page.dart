@@ -17,21 +17,11 @@ class GoogleMapPage extends StatefulWidget {
 
 class _GoogleMapPageState extends State<GoogleMapPage> {
   GoogleMapController? _mapController;
-  bool _isTracking = false;
 
   @override
   void dispose() {
     _mapController?.dispose();
     super.dispose();
-  }
-
-  void _toggleTracking(BuildContext context) {
-    setState(() => _isTracking = !_isTracking);
-    context.read<MapsBloc>().add(
-          _isTracking
-              ? MapsLocationTrackingStarted()
-              : MapsLocationTrackingStopped(),
-        );
   }
 
   @override
@@ -44,9 +34,14 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
           BlocBuilder<MapsBloc, MapsState>(
             builder: (context, state) {
               return IconButton(
-                icon: Icon(_isTracking ? Icons.stop : Icons.play_arrow),
-                onPressed: () => _toggleTracking(context),
-                tooltip: _isTracking ? 'Stop Tracking' : 'Start Tracking',
+                icon: Icon(state.isTracking ? Icons.stop : Icons.play_arrow),
+                onPressed: () {
+                  final event = state.isTracking
+                      ? MapsLocationTrackingStopped()
+                      : MapsLocationTrackingStarted();
+                  context.read<MapsBloc>().add(event);
+                },
+                tooltip: state.isTracking ? 'Stop Tracking' : 'Start Tracking',
               );
             },
           ),
@@ -65,13 +60,13 @@ class _GoogleMapPageState extends State<GoogleMapPage> {
             return const _RetryContent();
           }
 
-          if (state.initialPosition == null) {
+          if (state.cameraPosition == null) {
             return const Center(child: CircularProgressIndicator.adaptive());
           }
 
           return GoogleMap(
             initialCameraPosition: CameraPosition(
-              target: state.initialPosition!,
+              target: state.cameraPosition!,
               zoom: MapConstants.defaultZoom,
             ),
             onMapCreated: (controller) => _mapController = controller,

@@ -30,7 +30,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       final hasPermission = await repository.checkLocationPermission();
       if (!hasPermission) {
         emit(state.copyWith(
-          initialPosition: MapConstants.defaultLocation,
+          cameraPosition: MapConstants.defaultLocation,
           error: LocationPermissionDeniedFailure(),
         ));
         return;
@@ -43,8 +43,9 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
 
       if (routePositions.length < 2) {
         emit(state.copyWith(
-          initialPosition: currentLocation.position,
+          cameraPosition: currentLocation.position,
           currentLocation: currentLocation,
+          isTracking: true,
         ));
         return;
       }
@@ -54,7 +55,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
 
       emit(
         state.copyWith(
-          initialPosition: currentLocation.position,
+          isTracking: true,
+          cameraPosition: currentLocation.position,
           currentLocation: currentLocation,
           routePositions: routePositions,
           markers: <Marker>{
@@ -91,6 +93,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     MapsLocationTrackingStarted event,
     Emitter<MapsState> emit,
   ) async {
+    emit(state.copyWith(isTracking: true));
     await _locationSubscription?.cancel();
     _locationSubscription = repository.getLocationUpdates().listen(
       (locationPoint) {
@@ -103,8 +106,9 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     MapsLocationTrackingStopped event,
     Emitter<MapsState> emit,
   ) async {
+    emit(state.copyWith(isTracking: false));
     await _locationSubscription?.cancel();
-    return emit(state.copyWith(currentLocation: null));
+    return;
   }
 
   Future<void> _onRouteReset(
