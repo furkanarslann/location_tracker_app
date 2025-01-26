@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -7,6 +6,7 @@ import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/entities/route_data.dart';
+import 'package:location_tracker_app/domain/entities/map_marker_data.dart';
 import 'package:location_tracker_app/domain/repositories/location_repository.dart';
 
 part 'maps_state.dart';
@@ -61,29 +61,15 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           cameraPosition: currentLocation.position,
           currentLocation: currentLocation,
           routePositions: savedRoute.positions,
-          markers: <Marker>{
-            Marker(
-              markerId: const MarkerId('marker_source'),
+          markers: {
+            MapMarkerData.source(
               position: savedRoute.source,
-              infoWindow: InfoWindow(
-                title: 'Source',
-                snippet: savedRoute.sourceAddress ?? 'Address not found',
-              ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueBlue,
-              ),
-            ),
-            Marker(
-              markerId: const MarkerId('marker_destination'),
+              address: savedRoute.sourceAddress,
+            ).toMarker(),
+            MapMarkerData.destination(
               position: savedRoute.destination,
-              infoWindow: InfoWindow(
-                title: 'Destination',
-                snippet: savedRoute.destinationAddress ?? 'Address not found',
-              ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueGreen,
-              ),
-            ),
+              address: savedRoute.destinationAddress,
+            ).toMarker(),
           },
         ),
       );
@@ -146,26 +132,15 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         event.destination,
       );
 
-      final markers = <Marker>{
-        Marker(
-          markerId: const MarkerId('marker_source'),
+      final markers = {
+        MapMarkerData.source(
           position: state.currentLocation!.position,
-          infoWindow: InfoWindow(
-            title: 'Source',
-            snippet: sourceAddress ?? 'Address not found',
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        ),
-        Marker(
-          markerId: const MarkerId('marker_destination'),
+          address: sourceAddress,
+        ).toMarker(),
+        MapMarkerData.destination(
           position: event.destination,
-          infoWindow: InfoWindow(
-            title: 'Destination',
-            snippet: destinationAddress ?? 'Address not found',
-          ),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        )
+          address: destinationAddress,
+        ).toMarker(),
       };
 
       final routeData = RouteData(
@@ -195,27 +170,15 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       );
 
       if (distance >= MapConstants.minimumDistanceThreshold) {
-        final address =
-            await repository.getAddressFromPosition(currentPosition);
-
-        newMarkers.add(
-          Marker(
-            markerId: MarkerId(
-              'footprint_${DateTime.now().millisecondsSinceEpoch}',
-            ),
-            position: currentPosition,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueViolet,
-            ),
-            onTap: () {
-              log('x Marker address: $address');
-            },
-            infoWindow: InfoWindow(
-              title: 'Footprint',
-              snippet: address ?? 'Distance: ${distance.toStringAsFixed(2)}m',
-            ),
-          ),
+        final address = await repository.getAddressFromPosition(
+          currentPosition,
         );
+        final footprintMarker = MapMarkerData.footprint(
+          position: currentPosition,
+          address: address,
+        ).toMarker();
+
+        newMarkers.add(footprintMarker);
         _lastFootprintPosition = currentPosition;
       }
 

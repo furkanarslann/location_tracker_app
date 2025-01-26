@@ -79,8 +79,6 @@ class LocationRepositoryImpl implements LocationRepository {
         yield LocationPointData(
           position: LatLng(locationData.latitude, locationData.longitude),
           timestamp: DateTime.now(),
-          // TODO(Furkan): implement later
-          address: 'Unknown address',
         );
       }
     } catch (e) {
