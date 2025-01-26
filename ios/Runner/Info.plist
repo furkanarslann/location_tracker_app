@@ -29,9 +29,12 @@
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Location is required for tracking and displaying</string>
+		<string>This app needs access to location when open to track your route.</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>This app needs access to location when in the background to track your route.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Location is required for tracking and displaying</string>
+		<string>This app needs access to location when open and in the background to track your
+			route.</string>
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
