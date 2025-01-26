@@ -55,22 +55,28 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         return;
       }
 
+      final footprintMarkers = state.markers.where(
+        (marker) => marker.markerId.value.startsWith(MapMarkerData.footprintMarkerId),
+      ).toSet();
+
+      footprintMarkers.addAll({
+        MapMarkerData.source(
+          position: savedRoute.source,
+          address: savedRoute.sourceAddress,
+        ).toMarker(),
+        MapMarkerData.destination(
+          position: savedRoute.destination,
+          address: savedRoute.destinationAddress,
+        ).toMarker(),
+      });
+
       emit(
         state.copyWith(
           isTracking: true,
           cameraPosition: currentLocation.position,
           currentLocation: currentLocation,
           routePositions: savedRoute.positions,
-          markers: {
-            MapMarkerData.source(
-              position: savedRoute.source,
-              address: savedRoute.sourceAddress,
-            ).toMarker(),
-            MapMarkerData.destination(
-              position: savedRoute.destination,
-              address: savedRoute.destinationAddress,
-            ).toMarker(),
-          },
+          markers: footprintMarkers,
         ),
       );
     } catch (e) {
@@ -110,7 +116,16 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     Emitter<MapsState> emit,
   ) async {
     await repository.clearSavedRoute();
-    return emit(state.copyWith(routePositions: [], markers: {}));
+
+    final footprintMarkers = state.markers.where(
+      (marker) {
+        return marker.markerId.value.startsWith(
+          MapMarkerData.footprintMarkerId,
+        );
+      },
+    ).toSet();
+
+    return emit(state.copyWith(routePositions: [], markers: footprintMarkers));
   }
 
   Future<void> _onRouteAdded(
@@ -132,7 +147,11 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         event.destination,
       );
 
-      final markers = {
+      final footprintMarkers = state.markers.where(
+        (marker) => marker.markerId.value.startsWith(MapMarkerData.footprintMarkerId),
+      ).toSet();
+
+      footprintMarkers.addAll({
         MapMarkerData.source(
           position: state.currentLocation!.position,
           address: sourceAddress,
@@ -141,7 +160,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           position: event.destination,
           address: destinationAddress,
         ).toMarker(),
-      };
+      });
 
       final routeData = RouteData(
         positions: routePositions,
@@ -149,7 +168,11 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         destinationAddress: destinationAddress,
       );
 
-      emit(state.copyWith(routePositions: routePositions, markers: markers));
+      emit(state.copyWith(
+        routePositions: routePositions,
+        markers: footprintMarkers,
+      ));
+      
       await repository.saveRouteData(routeData);
     } catch (e) {
       emit(state.copyWith(error: LocationServiceFailure(e.toString())));

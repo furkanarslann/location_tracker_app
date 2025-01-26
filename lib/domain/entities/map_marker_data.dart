@@ -16,12 +16,16 @@ class MapMarkerData extends Equatable {
     required this.subtitle,
   });
 
+  static const sourceMarkerId = 'm_source';
+  static const destinationMarkerId = 'm_destination';
+  static const footprintMarkerId = 'm_footprint';
+
   factory MapMarkerData.source({
     required LatLng position,
     String? address,
   }) {
     return MapMarkerData(
-      id: 'marker_source',
+      id: sourceMarkerId,
       position: position,
       iconHue: BitmapDescriptor.hueBlue,
       title: 'Source',
@@ -34,7 +38,7 @@ class MapMarkerData extends Equatable {
     String? address,
   }) {
     return MapMarkerData(
-      id: 'marker_destination',
+      id: destinationMarkerId,
       position: position,
       iconHue: BitmapDescriptor.hueGreen,
       title: 'Destination',
@@ -47,7 +51,7 @@ class MapMarkerData extends Equatable {
     String? address,
   }) {
     return MapMarkerData(
-      id: 'footprint_${DateTime.now().millisecondsSinceEpoch}',
+      id: '${footprintMarkerId}_${DateTime.now().millisecondsSinceEpoch}',
       position: position,
       iconHue: BitmapDescriptor.hueViolet,
       title: 'Footprint',
