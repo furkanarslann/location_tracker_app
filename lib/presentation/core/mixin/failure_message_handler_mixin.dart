@@ -3,7 +3,7 @@ import 'package:location_tracker_app/core/failures/failures.dart';
 
 typedef FailureMessage = (String title, String message);
 
-mixin FailureMessageHandler {
+mixin FailureMessageHandlerMixin {
   FailureMessage getFailureMessage(
     BuildContext context,
     CustomFailure failure,

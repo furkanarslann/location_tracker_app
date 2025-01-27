@@ -16,7 +16,7 @@ class ErrorSnackBar extends SnackBar {
         );
 }
 
-class _ErrorContent extends StatelessWidget with FailureMessageHandler {
+class _ErrorContent extends StatelessWidget with FailureMessageHandlerMixin {
   const _ErrorContent({required this.failure});
   final CustomFailure failure;
   @override
