@@ -186,35 +186,31 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     _MapsLocationReceived event,
     Emitter<MapsState> emit,
   ) async {
-    try {
-      final currentPosition = event.location.position;
-      final newMarkers = Set<Marker>.from(state.markers);
+    final currentPosition = event.location.position;
+    final newMarkers = Set<Marker>.from(state.markers);
 
-      final distance = await _mapsRepository.calculateDistance(
-        _lastFootprintPosition,
+    final distance = await _mapsRepository.calculateDistance(
+      _lastFootprintPosition,
+      currentPosition,
+    );
+
+    if (distance >= MapConstants.minimumDistanceThreshold) {
+      final address = await _mapsRepository.getAddressFromPosition(
         currentPosition,
       );
+      final footprintMarker = MapsMarkerData.footprint(
+        position: currentPosition,
+        address: address,
+      ).toMarker();
 
-      if (distance >= MapConstants.minimumDistanceThreshold) {
-        final address = await _mapsRepository.getAddressFromPosition(
-          currentPosition,
-        );
-        final footprintMarker = MapsMarkerData.footprint(
-          position: currentPosition,
-          address: address,
-        ).toMarker();
-
-        newMarkers.add(footprintMarker);
-        _lastFootprintPosition = currentPosition;
-      }
-
-      emit(state.copyWith(
-        currentLocation: event.location,
-        markers: newMarkers,
-      ));
-    } catch (e) {
-      throw UnknownFailure('Failed to receive location: $e');
+      newMarkers.add(footprintMarker);
+      _lastFootprintPosition = currentPosition;
     }
+
+    emit(state.copyWith(
+      currentLocation: event.location,
+      markers: newMarkers,
+    ));
   }
 
   Future<void> _onCameraLockToggled(
