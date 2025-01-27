@@ -185,6 +185,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     _MapsLocationReceived event,
     Emitter<MapsState> emit,
   ) async {
+    if (!state.isTracking) return;
+
     final currentPosition = event.location;
     final newMarkers = Set<Marker>.from(state.markers);
 
