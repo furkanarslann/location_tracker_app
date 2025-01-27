@@ -8,8 +8,7 @@ import GoogleMaps
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // TODO(Furkan): HIDE API KEY BEFORE PUSHING TO GITHUB
-    GMSServices.provideAPIKey("xx")
+    GMSServices.provideAPIKey("ADD GOOGLE MAPS API KEY HERE")
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

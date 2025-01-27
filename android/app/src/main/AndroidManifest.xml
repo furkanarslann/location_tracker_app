@@ -34,9 +34,8 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- TODO(Furkan): HIDE API KEY BEFORE PUSHING TO GITHUB -->
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="xx" />
+            android:value="ADD GOOGLE MAPS API KEY HERE" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
