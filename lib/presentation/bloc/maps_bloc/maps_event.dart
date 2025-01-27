@@ -25,7 +25,7 @@ class MapsRouteAdded extends MapsEvent {
 }
 
 class _MapsLocationReceived extends MapsEvent {
-  final LocationPointData location;
+  final LatLng location;
   const _MapsLocationReceived(this.location);
 
   @override

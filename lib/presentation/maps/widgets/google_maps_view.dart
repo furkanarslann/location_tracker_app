@@ -72,7 +72,7 @@ class _GoogleMapsViewState extends State<GoogleMapsView> {
   void _handleCameraPositionUpdates(MapsState state) {
     if (state.isCameraLocked && state.isTracking) {
       _mapController?.animateCamera(
-        CameraUpdate.newLatLng(state.currentLocation!.position),
+        CameraUpdate.newLatLng(state.currentLocation!),
       );
     }
   }

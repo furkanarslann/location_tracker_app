@@ -2,7 +2,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/core/services/geolocator_service.dart';
 import 'package:location_tracker_app/core/services/route_service.dart';
-import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/repositories/maps_repository.dart';
 import 'package:location_tracker_app/env.dart';
 import 'package:location_tracker_app/core/services/geocoding_service.dart';
@@ -20,7 +19,7 @@ class MapsRepositoryImpl implements MapsRepository {
   });
 
   @override
-  Future<LocationPointData> getLocation() async {
+  Future<LatLng> getLocation() async {
     try {
       final locationData = await geoLocatorService.getCurrentPosition().timeout(
             const Duration(seconds: 10),
@@ -29,23 +28,17 @@ class MapsRepositoryImpl implements MapsRepository {
             ),
           );
 
-      return LocationPointData(
-        position: LatLng(locationData.latitude, locationData.longitude),
-        timestamp: DateTime.now(),
-      );
+      return LatLng(locationData.latitude, locationData.longitude);
     } catch (e) {
       throw UnknownFailure(e.toString());
     }
   }
 
   @override
-  Stream<LocationPointData> getLocationUpdates() async* {
+  Stream<LatLng> getLocationUpdates() async* {
     try {
       await for (final locationData in geoLocatorService.getPositionStream()) {
-        yield LocationPointData(
-          position: LatLng(locationData.latitude, locationData.longitude),
-          timestamp: DateTime.now(),
-        );
+        yield LatLng(locationData.latitude, locationData.longitude);
       }
     } catch (e) {
       throw UnknownFailure(e.toString());

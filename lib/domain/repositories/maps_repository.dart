@@ -1,10 +1,9 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/entities/route_data.dart';
 
 abstract class MapsRepository {
-  Future<LocationPointData> getLocation();
-  Stream<LocationPointData> getLocationUpdates();
+  Future<LatLng> getLocation();
+  Stream<LatLng> getLocationUpdates();
 
   Future<RouteData?> getSavedRouteData();
   Future<void> saveRouteData(RouteData routeData);

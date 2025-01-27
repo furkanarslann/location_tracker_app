@@ -6,7 +6,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
-import 'package:location_tracker_app/domain/entities/location_point_data.dart';
 import 'package:location_tracker_app/domain/entities/maps_marker_data.dart';
 import 'package:location_tracker_app/domain/entities/route_data.dart';
 import 'package:location_tracker_app/domain/repositories/maps_repository.dart';
@@ -27,7 +26,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
 
   final MapsRepository _mapsRepository;
 
-  StreamSubscription<LocationPointData>? _locationSubscription;
+  StreamSubscription<LatLng>? _locationSubscription;
   late LatLng _lastFootprintPosition;
 
   Future<void> _onInitialized(
@@ -35,15 +34,15 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     Emitter<MapsState> emit,
   ) async {
     try {
-      final currentLocation = await _mapsRepository.getLocation();
-      _lastFootprintPosition = currentLocation.position;
+      final currentPosition = await _mapsRepository.getLocation();
+      _lastFootprintPosition = currentPosition;
       add(MapsLocationTrackingStarted());
 
       final savedRoute = await _mapsRepository.getSavedRouteData();
       if (savedRoute == null) {
         emit(state.copyWith(
-          initialCameraPosition: currentLocation.position,
-          currentLocation: currentLocation,
+          initialCameraPosition: currentPosition,
+          currentLocation: currentPosition,
           isTracking: true,
         ));
         return;
@@ -64,8 +63,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       emit(
         state.copyWith(
           isTracking: true,
-          initialCameraPosition: currentLocation.position,
-          currentLocation: currentLocation,
+          initialCameraPosition: currentPosition,
+          currentLocation: currentPosition,
           routePositions: savedRoute.positions,
           markers: allMarkers,
         ),
@@ -124,11 +123,11 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       assert(state.isTracking);
 
       final routePositions = await _mapsRepository.getRouteBetweenPositions(
-        source: state.currentLocation!.position,
+        source: state.currentLocation!,
         destination: event.destination,
       );
       final sourceAddress = await _mapsRepository.getAddressFromPosition(
-        state.currentLocation!.position,
+        state.currentLocation!,
       );
       final destinationAddress = await _mapsRepository.getAddressFromPosition(
         event.destination,
@@ -137,7 +136,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       final allMarkers = {
         ...state.footprintMarkers,
         MapsMarkerData.source(
-          position: state.currentLocation!.position,
+          position: state.currentLocation!,
           address: sourceAddress,
         ).toMarker(),
         MapsMarkerData.destination(
@@ -186,7 +185,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     _MapsLocationReceived event,
     Emitter<MapsState> emit,
   ) async {
-    final currentPosition = event.location.position;
+    final currentPosition = event.location;
     final newMarkers = Set<Marker>.from(state.markers);
 
     final distance = await _mapsRepository.calculateDistance(

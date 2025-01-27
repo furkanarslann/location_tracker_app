@@ -5,7 +5,7 @@ class MapsState extends Equatable {
   final List<LatLng> routePositions;
   final bool isTracking;
   final bool isCameraLocked;
-  final LocationPointData? currentLocation;
+  final LatLng? currentLocation;
   final LatLng? initialCameraPosition;
   final CustomFailure? failure;
 
@@ -49,7 +49,7 @@ class MapsState extends Equatable {
     LatLng? initialCameraPosition,
     Set<Marker>? markers,
     List<LatLng>? routePositions,
-    LocationPointData? currentLocation,
+    LatLng? currentLocation,
     CustomFailure? failure,
     bool? isTracking,
     bool? isCameraLocked,
