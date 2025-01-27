@@ -1,5 +1,3 @@
-# Confidential
-.env.keys
 # Miscellaneous
 *.class
 *.log
@@ -54,5 +52,3 @@ android/app/key.jks
 ios/build/
 ios/Podfile.lock
 pubspec.lock
-
-env.dart

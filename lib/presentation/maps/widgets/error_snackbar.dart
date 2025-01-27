@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
-import 'package:location_tracker_app/presentation/core/mixin/failure_message_handler_mixin.dart';
+import 'package:location_tracker_app/presentation/maps/mixin/failure_message_handler_mixin.dart';
 
 class ErrorSnackBar extends SnackBar {
   ErrorSnackBar(

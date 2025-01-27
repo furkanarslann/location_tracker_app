@@ -3,9 +3,9 @@ import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/core/services/geolocator_service.dart';
 import 'package:location_tracker_app/core/services/route_service.dart';
 import 'package:location_tracker_app/domain/repositories/maps_repository.dart';
-import 'package:location_tracker_app/env.dart';
 import 'package:location_tracker_app/core/services/geocoding_service.dart';
 import 'package:location_tracker_app/domain/entities/route_data.dart';
+import 'package:location_tracker_app/setup_environment.dart';
 
 class MapsRepositoryImpl implements MapsRepository {
   final RouteService routeService;
@@ -79,7 +79,7 @@ class MapsRepositoryImpl implements MapsRepository {
   }) async {
     try {
       final routePositions = await routeService.getRouteBetweenCoordinates(
-        googleApiKey: googleMapsApiKey,
+        googleApiKey: Environment.googleMapsApiKey,
         request: PolylineRequest(
           origin: PointLatLng(source.latitude, source.longitude),
           destination: PointLatLng(destination.latitude, destination.longitude),

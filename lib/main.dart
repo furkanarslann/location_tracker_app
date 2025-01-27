@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:location_tracker_app/core/constants/app_constants.dart';
 import 'package:location_tracker_app/di/injection.dart';
 import 'package:location_tracker_app/presentation/maps/maps_page.dart';
+import 'package:location_tracker_app/setup_environment.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Environment.setup();
   await setupDependencies();
   runApp(const LocationTrackerApp());
 }

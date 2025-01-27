@@ -6,7 +6,7 @@ import 'package:location_tracker_app/presentation/bloc/maps_bloc/maps_bloc.dart'
 import 'package:location_tracker_app/presentation/bloc/location_bloc/location_event.dart';
 import 'package:location_tracker_app/presentation/bloc/location_bloc/location_state.dart';
 import 'package:flutter/material.dart';
-import 'package:location_tracker_app/presentation/core/widgets/error_snackbar.dart';
+import 'package:location_tracker_app/presentation/maps/widgets/error_snackbar.dart';
 import 'package:location_tracker_app/presentation/maps/widgets/google_maps_view.dart';
 import 'package:location_tracker_app/presentation/maps/widgets/maps_control_menu_view.dart';
 
