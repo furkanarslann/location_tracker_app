@@ -41,7 +41,7 @@ class _GoogleMapsViewState extends State<GoogleMapsView> {
         return GoogleMap(
           onMapCreated: (controller) => _mapController = controller,
           initialCameraPosition: CameraPosition(
-            target: state.initialCameraPosition!,
+            target: state.initialCameraPosition ?? MapConstants.defaultLocation,
             zoom: MapConstants.defaultZoom,
           ),
           myLocationEnabled: state.isTracking,

@@ -1,5 +1,6 @@
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location_tracker_app/core/failures/failures.dart';
 
 class GeocodingService {
   factory GeocodingService() => _instance;
@@ -18,7 +19,7 @@ class GeocodingService {
       final place = placemarks.first;
       return _formatAddress(place);
     } catch (e) {
-      return null;
+      throw UnknownFailure('Failed to get address from position: $e');
     }
   }
 

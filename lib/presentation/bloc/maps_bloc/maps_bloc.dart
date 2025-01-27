@@ -1,19 +1,21 @@
 import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import 'package:location_tracker_app/core/constants/map_constants.dart';
 import 'package:location_tracker_app/core/failures/failures.dart';
 import 'package:location_tracker_app/domain/entities/location_point_data.dart';
-import 'package:location_tracker_app/domain/entities/route_data.dart';
 import 'package:location_tracker_app/domain/entities/maps_marker_data.dart';
-import 'package:location_tracker_app/domain/repositories/location_repository.dart';
+import 'package:location_tracker_app/domain/entities/route_data.dart';
+import 'package:location_tracker_app/domain/repositories/maps_repository.dart';
 
-part 'maps_state.dart';
 part 'maps_event.dart';
+part 'maps_state.dart';
 
 class MapsBloc extends Bloc<MapsEvent, MapsState> {
-  MapsBloc({required this.repository}) : super(MapsState.initial()) {
+  MapsBloc(this._mapsRepository) : super(MapsState.initial()) {
     on<MapsInitialized>(_onInitialized);
     on<MapsLocationTrackingStarted>(_onLocationTrackingStarted);
     on<MapsLocationTrackingStopped>(_onLocationTrackingStopped);
@@ -23,7 +25,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     on<MapsCameraLockToggled>(_onCameraLockToggled);
   }
 
-  final LocationRepository repository;
+  final MapsRepository _mapsRepository;
 
   StreamSubscription<LocationPointData>? _locationSubscription;
   late LatLng _lastFootprintPosition;
@@ -33,20 +35,11 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     Emitter<MapsState> emit,
   ) async {
     try {
-      final hasPermission = await repository.checkLocationPermission();
-      if (!hasPermission) {
-        emit(state.copyWith(
-          initialCameraPosition: MapConstants.defaultLocation,
-          error: LocationPermissionDeniedFailure(),
-        ));
-        return;
-      }
-
-      final currentLocation = await repository.getLocation();
+      final currentLocation = await _mapsRepository.getLocation();
       _lastFootprintPosition = currentLocation.position;
       add(MapsLocationTrackingStarted());
 
-      final savedRoute = await repository.getSavedRouteData();
+      final savedRoute = await _mapsRepository.getSavedRouteData();
       if (savedRoute == null) {
         emit(state.copyWith(
           initialCameraPosition: currentLocation.position,
@@ -56,15 +49,8 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         return;
       }
 
-      final footprintMarkers = state.markers.where(
-        (marker) {
-          return marker.markerId.value.startsWith(
-            MapsMarkerData.footprintMarkerId,
-          );
-        },
-      ).toSet();
-
-      footprintMarkers.addAll({
+      final allMarkers = {
+        ...state.footprintMarkers,
         MapsMarkerData.source(
           position: savedRoute.source,
           address: savedRoute.sourceAddress,
@@ -73,7 +59,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           position: savedRoute.destination,
           address: savedRoute.destinationAddress,
         ).toMarker(),
-      });
+      };
 
       emit(
         state.copyWith(
@@ -81,16 +67,11 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           initialCameraPosition: currentLocation.position,
           currentLocation: currentLocation,
           routePositions: savedRoute.positions,
-          markers: footprintMarkers,
+          markers: allMarkers,
         ),
       );
     } catch (e) {
-      if (e is LocationServiceTimeoutFailure) {
-        emit(state.copyWith(error: e));
-        return;
-      } else {
-        emit(state.copyWith(error: UnknownFailure(e.toString())));
-      }
+      throw UnknownFailure('Failed to initialize maps: $e');
     }
   }
 
@@ -98,13 +79,17 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     MapsLocationTrackingStarted event,
     Emitter<MapsState> emit,
   ) async {
-    emit(state.copyWith(isTracking: true));
-    await _locationSubscription?.cancel();
-    _locationSubscription = repository.getLocationUpdates().listen(
-      (locationPoint) {
-        add(_MapsLocationReceived(locationPoint));
-      },
-    );
+    try {
+      emit(state.copyWith(isTracking: true));
+      await _locationSubscription?.cancel();
+      _locationSubscription = _mapsRepository.getLocationUpdates().listen(
+        (locationPoint) {
+          add(_MapsLocationReceived(locationPoint));
+        },
+      );
+    } catch (e) {
+      throw UnknownFailure('Failed to start location tracking: $e');
+    }
   }
 
   Future<void> _onLocationTrackingStopped(
@@ -120,17 +105,15 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     MapsRouteReset event,
     Emitter<MapsState> emit,
   ) async {
-    await repository.clearSavedRoute();
-
-    final footprintMarkers = state.markers.where(
-      (marker) {
-        return marker.markerId.value.startsWith(
-          MapsMarkerData.footprintMarkerId,
-        );
-      },
-    ).toSet();
-
-    return emit(state.copyWith(routePositions: [], markers: footprintMarkers));
+    try {
+      await _mapsRepository.clearSavedRoute();
+      final footprintMarkers = state.footprintMarkers;
+      return emit(
+        state.copyWith(routePositions: [], markers: footprintMarkers),
+      );
+    } catch (e) {
+      throw UnknownFailure('Failed to reset route: $e');
+    }
   }
 
   Future<void> _onRouteAdded(
@@ -140,26 +123,19 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
     try {
       assert(state.isTracking);
 
-      final routePositions = await repository.getRouteBetweenPositions(
+      final routePositions = await _mapsRepository.getRouteBetweenPositions(
         source: state.currentLocation!.position,
         destination: event.destination,
       );
-
-      final sourceAddress = await repository.getAddressFromPosition(
+      final sourceAddress = await _mapsRepository.getAddressFromPosition(
         state.currentLocation!.position,
       );
-      final destinationAddress = await repository.getAddressFromPosition(
+      final destinationAddress = await _mapsRepository.getAddressFromPosition(
         event.destination,
       );
 
-      final footprintMarkers = state.markers
-          .where(
-            (marker) => marker.markerId.value
-                .startsWith(MapsMarkerData.footprintMarkerId),
-          )
-          .toSet();
-
-      footprintMarkers.addAll({
+      final allMarkers = {
+        ...state.footprintMarkers,
         MapsMarkerData.source(
           position: state.currentLocation!.position,
           address: sourceAddress,
@@ -168,22 +144,41 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
           position: event.destination,
           address: destinationAddress,
         ).toMarker(),
-      });
+      };
 
+      await _saveRouteToStorage(
+        routePositions,
+        sourceAddress,
+        destinationAddress,
+      );
+
+      emit(state.copyWith(routePositions: routePositions, markers: allMarkers));
+    } catch (e) {
+      emit(state.copyWith(failure: null));
+      CustomFailure failure;
+      if (e is RouteServiceNoRoutesFailure) {
+        failure = RouteServiceNoRoutesFailure();
+      } else {
+        failure = UnknownFailure(e.toString());
+      }
+      emit(state.copyWith(failure: failure));
+    }
+  }
+
+  Future<void> _saveRouteToStorage(
+    List<LatLng> routePositions,
+    String? sourceAddress,
+    String? destinationAddress,
+  ) async {
+    try {
       final routeData = RouteData(
         positions: routePositions,
         sourceAddress: sourceAddress,
         destinationAddress: destinationAddress,
       );
-
-      emit(state.copyWith(
-        routePositions: routePositions,
-        markers: footprintMarkers,
-      ));
-
-      await repository.saveRouteData(routeData);
+      await _mapsRepository.saveRouteData(routeData);
     } catch (e) {
-      emit(state.copyWith(error: LocationServiceFailure(e.toString())));
+      throw UnknownFailure('Failed to save route data: $e');
     }
   }
 
@@ -195,13 +190,13 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
       final currentPosition = event.location.position;
       final newMarkers = Set<Marker>.from(state.markers);
 
-      final distance = await repository.calculateDistance(
+      final distance = await _mapsRepository.calculateDistance(
         _lastFootprintPosition,
         currentPosition,
       );
 
       if (distance >= MapConstants.minimumDistanceThreshold) {
-        final address = await repository.getAddressFromPosition(
+        final address = await _mapsRepository.getAddressFromPosition(
           currentPosition,
         );
         final footprintMarker = MapsMarkerData.footprint(
@@ -218,7 +213,7 @@ class MapsBloc extends Bloc<MapsEvent, MapsState> {
         markers: newMarkers,
       ));
     } catch (e) {
-      emit(state.copyWith(error: LocationServiceFailure(e.toString())));
+      throw UnknownFailure('Failed to receive location: $e');
     }
   }
 

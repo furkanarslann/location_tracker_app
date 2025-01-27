@@ -7,7 +7,7 @@ class MapsState extends Equatable {
   final bool isCameraLocked;
   final LocationPointData? currentLocation;
   final LatLng? initialCameraPosition;
-  final CustomFailure? error;
+  final CustomFailure? failure;
 
   const MapsState({
     required this.markers,
@@ -16,7 +16,7 @@ class MapsState extends Equatable {
     required this.isCameraLocked,
     this.initialCameraPosition,
     this.currentLocation,
-    this.error,
+    this.failure,
   });
 
   factory MapsState.initial() {
@@ -25,18 +25,24 @@ class MapsState extends Equatable {
       markers: {},
       routePositions: [],
       currentLocation: null,
-      error: null,
+      failure: null,
       isTracking: false,
       isCameraLocked: false,
     );
   }
 
-  bool get hasError => error != null;
+  bool get hasFailed => failure != null;
   bool get hasRoutePositions => routePositions.isNotEmpty;
   bool get hasMarkers => markers.isNotEmpty;
 
-  bool get permissionGrantedButNoLocation {
-    return error is LocationServiceTimeoutFailure;
+  Set<Marker> get footprintMarkers {
+    return markers.where(
+      (marker) {
+        return marker.markerId.value.startsWith(
+          MapsMarkerData.footprintMarkerId,
+        );
+      },
+    ).toSet();
   }
 
   MapsState copyWith({
@@ -44,7 +50,7 @@ class MapsState extends Equatable {
     Set<Marker>? markers,
     List<LatLng>? routePositions,
     LocationPointData? currentLocation,
-    CustomFailure? error,
+    CustomFailure? failure,
     bool? isTracking,
     bool? isCameraLocked,
   }) {
@@ -54,7 +60,7 @@ class MapsState extends Equatable {
       markers: markers ?? this.markers,
       routePositions: routePositions ?? this.routePositions,
       currentLocation: currentLocation ?? this.currentLocation,
-      error: error ?? this.error,
+      failure: failure,
       isTracking: isTracking ?? this.isTracking,
       isCameraLocked: isCameraLocked ?? this.isCameraLocked,
     );
@@ -66,7 +72,7 @@ class MapsState extends Equatable {
         markers,
         routePositions,
         currentLocation,
-        error,
+        failure,
         isTracking,
         isCameraLocked,
       ];

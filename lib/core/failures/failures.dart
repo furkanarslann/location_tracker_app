@@ -7,25 +7,15 @@ abstract class CustomFailure extends Equatable {
   List<Object> get props => [];
 }
 
-class LocationPermissionDeniedFailure extends CustomFailure {
-  const LocationPermissionDeniedFailure();
-}
-
-class LocationServiceFailure extends CustomFailure {
-  const LocationServiceFailure(this.message);
-  final String message;
-  @override
-  List<Object> get props => [message];
-}
-
-class LocationServiceTimeoutFailure extends LocationServiceFailure {
-  const LocationServiceTimeoutFailure() : super('Location service timed out');
+class RouteServiceNoRoutesFailure extends CustomFailure {
+  const RouteServiceNoRoutesFailure();
 }
 
 class UnknownFailure extends CustomFailure {
-  final String message;
-  const UnknownFailure(this.message);
+  final String errorMessage;
+
+  const UnknownFailure(this.errorMessage);
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [errorMessage];
 }
