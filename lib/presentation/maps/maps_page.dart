@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:location_tracker_app/main.dart';
+import 'package:location_tracker_app/di/injection.dart';
 import 'package:location_tracker_app/presentation/bloc/location_bloc/location_bloc.dart';
 import 'package:location_tracker_app/presentation/bloc/maps_bloc/maps_bloc.dart';
 import 'package:location_tracker_app/presentation/bloc/location_bloc/location_event.dart';
