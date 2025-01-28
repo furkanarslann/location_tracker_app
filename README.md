@@ -2,7 +2,7 @@
 
 ## Ön Gereklilikler
 Bu projeyi çalıştırmadan önce, Google API key'inizi aşağıdaki dosyalara eklemeniz gerekmektedir.<br>
-API key'inizi bu dosyalarda bulunan `ADD YOUR GOOGLE MAPS API KEY HERE` ile değiştiriniz.
+API key'inizi bu dosyalarda bulunan `ADD GOOGLE MAPS API KEY HERE` ile değiştiriniz.
 
 - **.env**
 - **AndroidManifest.xml**
