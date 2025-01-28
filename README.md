@@ -1,16 +1,15 @@
-# location_tracker_app
+# Location Tracker App
 
-A new Flutter project.
+## Ön Gereklilikler
+Bu projeyi çalıştırmadan önce, Google API key'inizi aşağıdaki dosyalara eklemeniz gerekmektedir.<br>
+API key'inizi bu dosyalarda bulunan `ADD YOUR GOOGLE MAPS API KEY HERE` ile değiştiriniz.
 
-## Getting Started
+- **.env**
+- **AndroidManifest.xml**
+- **AppDelegate.swift**
 
-This project is a starting point for a Flutter application.
+<img width="372" alt="to_be_updated" src="https://github.com/user-attachments/assets/739cffb7-08df-46ff-bdb7-25d4e1523049" />
 
-A few resources to get you started if this is your first Flutter project:
+## PoC Video
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+https://github.com/user-attachments/assets/fd50cc3d-4a8b-4a80-ad7d-e28967827636
