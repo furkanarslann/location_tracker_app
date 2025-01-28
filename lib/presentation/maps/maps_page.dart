@@ -60,7 +60,7 @@ class MapsPage extends StatelessWidget {
     );
   }
 
-  void _handleMapsFailure(context, state) {
+  void _handleMapsFailure(BuildContext context, MapsState state) {
     assert(state.hasFailed);
     final failure = state.failure!;
     ScaffoldMessenger.of(context)
